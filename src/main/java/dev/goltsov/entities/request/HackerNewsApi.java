@@ -7,7 +7,9 @@ import lombok.Setter;
 @Setter
 public class HackerNewsApi extends ApiForRequest {
     public HackerNewsApi() {
-        domain = "hn.algolia.com/api/v1/search";
-        variables.put("query", "java");
+        super("hn.algolia.com/api/v1/search");
+        param("query", "java");
+        param("tags", "story");
+        param("hitsPerPage", "5");
     }
 }
