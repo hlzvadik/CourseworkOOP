@@ -32,6 +32,9 @@ public class SettingsParser {
                         throw new IllegalArgumentException("Incorrect writeType. Correct: 'new' or 'append'");
                     }
                 }
+                case "--outputFile" -> {
+                    settings.setOutputFile(nextValue(args, ++i, key));
+                }
                 default -> throw new IllegalArgumentException("Incorrect command line param: " + key);
             }
         }

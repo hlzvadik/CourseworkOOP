@@ -13,4 +13,5 @@ public class Settings {
     private String[] showSources = new String[0];
     private FileType fileType;
     private WriteType writeType;
+    private String outputFile;
 }

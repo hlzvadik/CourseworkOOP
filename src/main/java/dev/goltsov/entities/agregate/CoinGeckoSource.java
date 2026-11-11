@@ -40,7 +40,7 @@ public class CoinGeckoSource implements DataSource<CoinGeckoResponse> {
     @Override
     public CoinGeckoResponse parse(String json) {
         try {
-            return mapper.readValue(json, new TypeReference<CoinGeckoResponse>() {});
+            return new CoinGeckoResponse(mapper.readValue(json, new TypeReference<List<CoinGeckoResponse.Coin>>() {}));
         } catch (JsonProcessingException e) {
             throw new ApiException("Bad crypto response", e);
         }
