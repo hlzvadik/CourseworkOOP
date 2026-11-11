@@ -6,11 +6,7 @@ import java.net.URISyntaxException;
 import java.net.http.HttpRequest;
 
 public class HttpFetcher {
-    public String get(String uri) {
-        try {
-            return new HttpApiClient().doRequest(HttpRequest.newBuilder().uri(new URI(uri)).GET().build()).body();
-        } catch (IOException | InterruptedException | URISyntaxException e) {
-            throw new RuntimeException(e);
-        }
+    public String get(String uri) throws URISyntaxException, IOException, InterruptedException {
+        return new HttpApiClient().doRequest(HttpRequest.newBuilder().uri(new URI(uri)).GET().build()).body();
     }
 }

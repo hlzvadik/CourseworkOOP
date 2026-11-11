@@ -9,9 +9,11 @@ import dev.goltsov.entities.response.CoinGeckoResponse;
 import dev.goltsov.exception.ApiException;
 import dev.goltsov.http.HttpFetcher;
 
+import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.*;
 
-public class CoinGeckoSource implements DataSource {
+public class CoinGeckoSource implements DataSource<CoinGeckoResponse> {
     private final HttpFetcher http;
     private final ObjectMapper mapper;
     private final CoinGeckoApi api;
@@ -28,25 +30,27 @@ public class CoinGeckoSource implements DataSource {
     }
 
     @Override
-    public List<AggregatedRecord> fetch(Map<String, String> overrides) {
+    public List<AggregatedRecord> fetch(Map<String, String> overrides) throws URISyntaxException, IOException, InterruptedException {
         Map<String, String> params = new LinkedHashMap<>(api.getVariables());
         params.putAll(overrides);
         String json = http.get(api.buildUrl(params));
         return map(parse(json), params);
     }
 
-    List<CoinGeckoResponse> parse(String json) {
+    @Override
+    public CoinGeckoResponse parse(String json) {
         try {
-            return mapper.readValue(json, new TypeReference<List<CoinGeckoResponse>>() {});
+            return mapper.readValue(json, new TypeReference<CoinGeckoResponse>() {});
         } catch (JsonProcessingException e) {
             throw new ApiException("Bad crypto response", e);
         }
     }
 
-    List<AggregatedRecord> map(List<CoinGeckoResponse> coins, Map<String, String> params) {
+    @Override
+    public List<AggregatedRecord> map(CoinGeckoResponse coins, Map<String, String> params) {
         String paramString = ApiForRequest.format(params);
         List<AggregatedRecord> result = new ArrayList<>();
-        for (CoinGeckoResponse coin : coins) {
+        for (CoinGeckoResponse.Coin coin : coins.coins()) {
             Map<String, String> values = new LinkedHashMap<>();
             values.put("coin", Objects.toString(coin.name(), ""));
             values.put("price", Objects.toString(coin.current_price(), ""));

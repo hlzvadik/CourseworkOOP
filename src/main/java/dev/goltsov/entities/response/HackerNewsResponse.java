@@ -5,9 +5,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.time.Instant;
 import java.util.List;
 
-public record HackerNewsResponse(List<Hit> hits) {
+public record HackerNewsResponse(List<Hit> hits) implements Response {
     public record Hit(
-            @JsonProperty("created_at") Instant time,
+            Instant created_at,
             String title,
             String author,
             Integer points,

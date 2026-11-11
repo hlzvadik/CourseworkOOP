@@ -4,7 +4,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 
-public record OpenMeteoResponse(Current current) {
+public record OpenMeteoResponse(Current current) implements Response {
     public record Current(
             LocalDateTime time,
             Double temperature_2m,

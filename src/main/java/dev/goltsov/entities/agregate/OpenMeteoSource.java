@@ -8,10 +8,12 @@ import dev.goltsov.entities.response.OpenMeteoResponse;
 import dev.goltsov.exception.ApiException;
 import dev.goltsov.http.HttpFetcher;
 
+import java.io.IOException;
+import java.net.URISyntaxException;
 import java.time.ZoneOffset;
 import java.util.*;
 
-public class OpenMeteoSource implements DataSource {
+public class OpenMeteoSource implements DataSource<OpenMeteoResponse> {
     private final HttpFetcher http;
     private final ObjectMapper mapper;
     private final OpenMeteoApi api;
@@ -28,14 +30,15 @@ public class OpenMeteoSource implements DataSource {
     }
 
     @Override
-    public List<AggregatedRecord> fetch(Map<String, String> overrides) {
+    public List<AggregatedRecord> fetch(Map<String, String> overrides) throws URISyntaxException, IOException, InterruptedException {
         Map<String, String> params = new LinkedHashMap<>(api.getVariables());
         params.putAll(overrides);
         String json = http.get(api.buildUrl(params));
         return map(parse(json), params);
     }
 
-    OpenMeteoResponse parse(String json) {
+    @Override
+    public OpenMeteoResponse parse(String json) {
         try {
             return mapper.readValue(json, OpenMeteoResponse.class);
         } catch (JsonProcessingException e) {
@@ -43,7 +46,8 @@ public class OpenMeteoSource implements DataSource {
         }
     }
 
-    List<AggregatedRecord> map(OpenMeteoResponse response, Map<String, String> params) {
+    @Override
+    public List<AggregatedRecord> map(OpenMeteoResponse response, Map<String, String> params) {
         OpenMeteoResponse.Current c = response.current();
         if (c == null || c.time() == null) {
             throw new ApiException("No 'current' in weather response");
