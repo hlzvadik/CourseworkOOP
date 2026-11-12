@@ -1,0 +1,10 @@
+source,params,timestamp,values
+weather,"latitude=60.00&longitude=30.38&current=temperature_2m,wind_speed_10m,relative_humidity_2m",2026-11-12T09:45:00Z,"{""temperature"":""1.7"",""windSpeed"":""13.3"",""humidity"":""90""}"
+weather,"latitude=60.00&longitude=30.38&current=temperature_2m,wind_speed_10m,relative_humidity_2m",2026-11-12T09:45:00Z,"{""temperature"":""1.7"",""windSpeed"":""13.3"",""humidity"":""90""}"
+hackernews,query=java&tags=story&hitsPerPage=5,2021-04-05T14:04:22Z,"{""title"":""Google’s copying of the Java SE API was fair use [pdf]"",""author"":""pdoconnell"",""points"":""4103"",""numComments"":""932""}"
+hackernews,query=java&tags=story&hitsPerPage=5,2016-10-11T15:00:38Z,"{""title"":""Yarn – A new package manager for JavaScript"",""author"":""cpojer"",""points"":""1714"",""numComments"":""469""}"
+hackernews,query=java&tags=story&hitsPerPage=5,2013-11-13T14:38:18Z,"{""title"":""A spreadsheet in fewer than 30 lines of JavaScript, no library used"",""author"":""ondras"",""points"":""1447"",""numComments"":""259""}"
+hackernews,query=java&tags=story&hitsPerPage=5,2022-07-05T20:41:53Z,"{""title"":""Bun: Fast JavaScript runtime, transpiler, and NPM client written in Zig"",""author"":""firloop"",""points"":""1431"",""numComments"":""314""}"
+hackernews,query=java&tags=story&hitsPerPage=5,2025-01-30T11:28:31Z,"{""title"":""JavaScript Temporal is coming"",""author"":""SigmundurM"",""points"":""1405"",""numComments"":""399""}"
+crypto,"vs_currency=usd&ids=bitcoin,ethereum",2026-11-12T09:53:53Z,"{""coin"":""Bitcoin"",""price"":""73360"",""marketCap"":""1475338852584"",""change24h"":""-0.36666""}"
+crypto,"vs_currency=usd&ids=bitcoin,ethereum",2026-11-12T09:53:53Z,"{""coin"":""Ethereum"",""price"":""2043.07"",""marketCap"":""249688735648"",""change24h"":""-0.51683""}"

@@ -1,55 +1,55 @@
 package dev.goltsov;
 
-import com.fasterxml.jackson.databind.MapperFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import dev.goltsov.entities.agregate.CoinGeckoSource;
-import dev.goltsov.entities.agregate.HackerNewsSource;
-import dev.goltsov.entities.agregate.OpenMeteoSource;
-import dev.goltsov.entities.request.CoinGeckoApi;
-import dev.goltsov.entities.request.HackerNewsApi;
-import dev.goltsov.entities.request.OpenMeteoApi;
-import dev.goltsov.http.HttpFetcher;
+import dev.goltsov.exception.StorageException;
+import dev.goltsov.settings.Action;
 import dev.goltsov.settings.Settings;
 import dev.goltsov.settings.SettingsParser;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.net.URISyntaxException;
-import java.util.Map;
+import java.util.Arrays;
 
 @Slf4j
 public class Main {
-    public static void main(String[] args) throws URISyntaxException, IOException, InterruptedException {
-        SettingsParser settingsParser = new SettingsParser();
-        Settings settings = null;
+    public static void main(String[] args) {
+        Settings settings;
         try {
-            settings = settingsParser.getSettings(args);
+            settings = new SettingsParser().getSettings(args);
         } catch (IllegalArgumentException e) {
-            log.error(e.getMessage());
+            log.error("Invalid arguments: {}", e.getMessage());
+            System.exit(1);
             return;
         }
 
-        HttpFetcher httpFetcher = new HttpFetcher();
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.registerModule(new JavaTimeModule());
-        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-        objectMapper.disable(MapperFeature.REQUIRE_HANDLERS_FOR_JAVA8_TIMES);
+        log.info("Started: action={}, fileType={}, file={}",
+                settings.getAction(), settings.getFileType(), settings.getOutputFile());
+        AppContext appContext = new AppContext(settings);
+        int code = run(appContext);
+        log.info("Finished with code {}", code);
+        if (code != 0) {
+            System.exit(code);
+        }
+    }
 
-        Aggregator aggregator = new Aggregator(Map.of(
-                    "weather", new OpenMeteoSource(httpFetcher, objectMapper, new OpenMeteoApi()),
-                    "hackernews", new HackerNewsSource(httpFetcher, objectMapper, new HackerNewsApi()),
-                    "crypto", new CoinGeckoSource(httpFetcher, objectMapper, new CoinGeckoApi())
-                ),
-                objectMapper,
-                settings
-        );
-        BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(System.out));
-        aggregator.run(writer);
-        writer.flush();
-        writer.close();
+    private static int run(AppContext appContext) {
+        try {
+            Aggregator aggregator = appContext.getAggregator();
+            Settings settings = appContext.getSettings();
+            ConsolePrinter printer = new ConsolePrinter(System.out);
+
+            if (settings.getAction() == Action.POLL) {
+                PollResult result = aggregator.poll(Arrays.asList(settings.getSources()), settings.getWriteType());
+                printer.printPollResult(result, settings.getOutputFile());
+                return result.saved() == 0 && !result.errors().isEmpty() ? 1 : 0;
+            }
+
+            printer.printRecords(aggregator.read(Arrays.asList(settings.getShowSources())));
+            return 0;
+        } catch (IllegalArgumentException | StorageException e) {
+            log.error(e.getMessage());
+            return 1;
+        } catch (RuntimeException e) {
+            log.error("Unexpected error", e);
+            return 1;
+        }
     }
 }

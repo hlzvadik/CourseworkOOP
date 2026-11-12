@@ -9,6 +9,7 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -23,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 public class CsvStorage implements Storage {
     private static final String[] HEADER = {"source", "params", "timestamp", "values"};
 
@@ -35,8 +37,12 @@ public class CsvStorage implements Storage {
     }
 
     @Override
-    public synchronized void save(List<AggregatedRecord> records, WriteType writeType) {
+    public void save(List<AggregatedRecord> records, WriteType writeType) {
         try {
+            Path parent = path.toAbsolutePath().getParent();
+            if (parent != null) {
+                Files.createDirectories(parent);
+            }
             boolean writeHeader = writeType == WriteType.NEW || !Files.exists(path) || Files.size(path) == 0;
 
             StandardOpenOption[] options = writeType == WriteType.NEW
@@ -58,12 +64,13 @@ public class CsvStorage implements Storage {
                 }
             }
         } catch (IOException e) {
-            throw new StorageException(e.getMessage());
+            throw new StorageException("Cannot write " + path + ": " + e.getMessage(), e);
         }
+        log.info("Saved {} records to {} (mode={})", records.size(), path, writeType);
     }
 
     @Override
-    public synchronized List<AggregatedRecord> readAll() {
+    public List<AggregatedRecord> readAll() {
         List<AggregatedRecord> result = new ArrayList<>();
         try {
             if (!Files.exists(path) || Files.size(path) == 0) {
@@ -84,8 +91,9 @@ public class CsvStorage implements Storage {
                 }
             }
         } catch (IOException | DateTimeParseException | IllegalArgumentException e) {
-            throw new StorageException(e.getMessage());
+            throw new StorageException("Cannot read " + path + ": " + e.getMessage(), e);
         }
+        log.info("Read {} records from {}", result.size(), path);
         return result;
     }
 }

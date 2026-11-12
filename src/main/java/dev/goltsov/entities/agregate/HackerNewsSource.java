@@ -8,9 +8,12 @@ import dev.goltsov.entities.response.HackerNewsResponse;
 import dev.goltsov.exception.ApiException;
 import dev.goltsov.http.HttpFetcher;
 
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.util.*;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 public class HackerNewsSource implements DataSource<HackerNewsResponse> {
     private final HttpFetcher http;
@@ -29,9 +32,9 @@ public class HackerNewsSource implements DataSource<HackerNewsResponse> {
     }
 
     @Override
-    public List<AggregatedRecord> fetch(Map<String, String> overrides) throws URISyntaxException, IOException, InterruptedException {
+    public List<AggregatedRecord> fetch(Map<String, String> additionalParams) {
         Map<String, String> params = new LinkedHashMap<>(api.getVariables());
-        params.putAll(overrides);
+        params.putAll(additionalParams);
         String json = http.get(api.buildUrl(params));
         return map(parse(json), params);
     }
@@ -39,7 +42,11 @@ public class HackerNewsSource implements DataSource<HackerNewsResponse> {
     @Override
     public HackerNewsResponse parse(String json) {
         try {
-            return mapper.readValue(json, HackerNewsResponse.class);
+            HackerNewsResponse response = mapper.readValue(json, HackerNewsResponse.class);
+            if (response == null) {
+                throw new ApiException("Empty hackernews response");
+            }
+            return response;
         } catch (JsonProcessingException e) {
             throw new ApiException("Bad hackernews response", e);
         }
@@ -58,7 +65,8 @@ public class HackerNewsSource implements DataSource<HackerNewsResponse> {
             values.put("author", Objects.toString(hit.author(), ""));
             values.put("points", Objects.toString(hit.points(), ""));
             values.put("numComments", Objects.toString(hit.num_comments(), ""));
-            result.add(new AggregatedRecord(name(), paramString, hit.created_at(), values));
+            Instant time = hit.created_at() != null ? hit.created_at() : Instant.now();
+            result.add(new AggregatedRecord(name(), paramString, time, values));
         }
         return result;
     }

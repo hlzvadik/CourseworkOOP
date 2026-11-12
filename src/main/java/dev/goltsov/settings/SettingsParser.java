@@ -18,23 +18,11 @@ public class SettingsParser {
                     }
                 }
                 case "--sources" -> settings.setSources(parseList(nextValue(args, ++i, key), key));
-                case "--fileType" -> {
-                    try {
-                        settings.setFileType(FileType.valueOf(nextValue(args, ++i, key).toUpperCase()));
-                    } catch (IllegalArgumentException e) {
-                        throw new IllegalArgumentException("Incorrect fileType. Correct: 'json' or 'csv'");
-                    }
-                }
-                case "--writeType" -> {
-                    try {
-                        settings.setWriteType(WriteType.valueOf(nextValue(args, ++i, key).toUpperCase()));
-                    } catch (IllegalArgumentException e) {
-                        throw new IllegalArgumentException("Incorrect writeType. Correct: 'new' or 'append'");
-                    }
-                }
-                case "--outputFile" -> {
-                    settings.setOutputFile(nextValue(args, ++i, key));
-                }
+                case "--fileType" -> settings.setFileType(
+                        parseEnum(FileType.class, nextValue(args, ++i, key), key, "'json' or 'csv'"));
+                case "--writeType" -> settings.setWriteType(
+                        parseEnum(WriteType.class, nextValue(args, ++i, key), key, "'new' or 'append'"));
+                case "--outputFile" -> settings.setOutputFile(nextValue(args, ++i, key));
                 default -> throw new IllegalArgumentException("Incorrect command line param: " + key);
             }
         }
@@ -52,6 +40,10 @@ public class SettingsParser {
                 throw new IllegalArgumentException("Required: --sources, --fileType, --writeType");
             }
         }
+
+        if (settings.getOutputFile() == null) {
+            settings.setOutputFile("data." + settings.getFileType().name().toLowerCase());
+        }
         return settings;
     }
 
@@ -60,6 +52,14 @@ public class SettingsParser {
             throw new IllegalArgumentException("Missing value for " + key);
         }
         return args[index];
+    }
+
+    private <E extends Enum<E>> E parseEnum(Class<E> type, String value, String key, String allowed) {
+        try {
+            return Enum.valueOf(type, value.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Incorrect " + key + ": " + value + ". Correct: " + allowed);
+        }
     }
 
     private String[] parseList(String value, String key) {
